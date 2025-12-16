@@ -22,6 +22,7 @@ motorRF = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 motorLR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
 motorRR = Motor(Ports.PORT4, GearSetting.RATIO_18_1, False)
 motorIntake = Motor(Ports.PORT11)
+motorPickaxe = Motor(Ports.PORT12)
 
 
 def manual_control():
@@ -50,7 +51,7 @@ def manual_control():
     if controller.buttonL1.pressing():
         motorIntake.spin(FORWARD, 25, PERCENT)
     elif controller.buttonL2.pressing():
-        motorIntake.spin(FORWARD, 50, PERCENT)
+        motorIntake.spin(FORWARD, 100, PERCENT)
     else:
         motorIntake.stop()
 
@@ -60,6 +61,13 @@ def manual_control():
     elif controller.buttonDown.pressing():
         if sensitivity > 0:
             sensitivity -= 0.25
+
+    if controller.buttonR1.pressing():
+        motorPickaxe.set_velocity(100, PERCENT)
+        if motorPickaxe.position(DEGREES) < 20:
+            motorPickaxe.spin_to_position(90, DEGREES, False)
+        elif motorPickaxe.position(DEGREES) > 85:
+            motorPickaxe.spin_to_position(0, DEGREES, False)
 
 def auto_control():
     pass
@@ -101,4 +109,4 @@ while True:
     elif mode == 2:
         auto_control()
 
-    draw(controller.screen)    
+    #draw(controller.screen)    
