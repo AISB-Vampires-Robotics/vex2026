@@ -16,6 +16,8 @@ controller = Controller()
 sensitivity = 1
 mode = 0
 
+refresh_queued = True
+
 # Connection scheme
 motorLF = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
 motorRF = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
@@ -28,6 +30,7 @@ motorPickaxe = Motor(Ports.PORT12)
 def manual_control():
     global sensitivity
     global motorLF, motorRF, motorRF, motorRR, motorIntake
+    global refresh_queued
     
     # See https://www.vexforum.com/t/wiki/67132/33
     # Or https://www.youtube.com/watch?v=gnSW2QpkGXQ
@@ -47,9 +50,8 @@ def manual_control():
     motorLR.spin(FORWARD, leftB, PERCENT)
     motorRR.spin(FORWARD, rightB, PERCENT)
 
-
     if controller.buttonL1.pressing():
-        motorIntake.spin(FORWARD, 25, PERCENT)
+        motorIntake.spin(REVERSE, 100, PERCENT)
     elif controller.buttonL2.pressing():
         motorIntake.spin(FORWARD, 100, PERCENT)
     else:
@@ -58,9 +60,11 @@ def manual_control():
     if controller.buttonUp.pressing():
         if sensitivity < 1:
             sensitivity += 0.25
+            refresh_queued = True
     elif controller.buttonDown.pressing():
         if sensitivity > 0:
             sensitivity -= 0.25
+            refresh_queued = True
 
     if controller.buttonR1.pressing():
         motorPickaxe.set_velocity(100, PERCENT)
@@ -81,26 +85,37 @@ def disable():
     motorIntake.stop()
 
 def draw(display):
-    global sensitivity
+    global sensitivity, refresh_queued
     display.clear_screen()
     display.set_cursor(1, 1)
 
-    display.print("Mode: " + str(mode))
+    if (mode == 0):
+        display.print("Mode: DISABLED")
+    elif (mode == 1): 
+        display.print("Mode: MANUAL")
+    elif (mode == 2):
+        display.print("Mode: AUTO")
     display.next_row()
-    display.print("Sens: " + str(sensitivity))
+    if (mode == 0 or mode == 2):
+        display.print("Sens: N/A")
+    else:
+        display.print("Sens: " + str(sensitivity))
     display.next_row()
-    display.print("L")
-    display.set_cursor(display.row(), 24)
-    display.print("R")
+    display.print("Left")
+    display.set_cursor(display.row(), 20)
+    display.print("Right")
+    refresh_queued = False
 
 
 while True:
     if controller.buttonRight.pressing():
         if mode != 2:
             mode = mode + 1
+            refresh_queued = True
     elif controller.buttonLeft.pressing():
         if mode != 0:
             mode = mode - 1
+            refresh_queued = True
 
     if mode == 0:
         disable()
@@ -109,4 +124,5 @@ while True:
     elif mode == 2:
         auto_control()
 
-    #draw(controller.screen)    
+    if refresh_queued:
+        draw(controller.screen)    
